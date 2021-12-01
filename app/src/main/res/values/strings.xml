@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">MensaCard</string>
+    <string name="widget_desc">MensaCard Kontostand</string>
+
 </resources>
