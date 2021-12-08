@@ -24,13 +24,9 @@ import java.math.BigDecimal
 
 class MainActivity : AppCompatActivity() {
 
-    var url = "https://topup.klarna.com/api/v1/STW_MUNSTER/cards/"
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-
 
         val sharedPref = getSharedPreferences("cardprefs",Context.MODE_PRIVATE) ?: return
         val nr = sharedPref.getInt("card_nr", -1)
@@ -39,47 +35,14 @@ class MainActivity : AppCompatActivity() {
             findViewById<EditText>(R.id.editTextNumber).setText(nr.toString())
         }
 
-
         findViewById<Button>(R.id.button).setOnClickListener {
             storeNr(findViewById<EditText>(R.id.editTextNumber).text.toString().toInt())
-            test()
             showAppWidget()
         }
     }
 
-    private fun getMyBalance(url: String): Int {
-        var result = -1
-        val retrofitBuilder = Retrofit.Builder()
-            .addConverterFactory(GsonConverterFactory.create())
-            .baseUrl(url)
-            .build()
-            .create(BalanceApi::class.java)
-        val retrofitData = retrofitBuilder.getBalance()
 
-        retrofitData.enqueue(object : Callback<BalanceResponse?> {
-            override fun onResponse(
-                call: Call<BalanceResponse?>,
-                response: Response<BalanceResponse?>
-            ) {
-                val responseBody = response.body()
-
-                if(responseBody != null) {
-                    result = responseBody.balance
-                    Log.d("Emka - Tag", "onResponse: ${responseBody.balance}")
-                } else {
-                    Log.d("Emka - Tag", "responseBody is null")
-                }
-
-            }
-
-            override fun onFailure(call: Call<BalanceResponse?>, t: Throwable) {
-                Log.d("Emka - Tag", "onFailure: ")
-            }
-        })
-        return result
-    }
-
-    fun storeNr(nr: Int){
+    private fun storeNr(nr: Int){
         val sharedPref = getSharedPreferences("cardprefs",Context.MODE_PRIVATE) ?: return
         with (sharedPref.edit()) {
             putInt("card_nr", nr)
@@ -88,41 +51,21 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun showAppWidget() {
-        var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
-
-
-        val intent = getIntent();
-        val extras = intent.getExtras();
+    private fun showAppWidget() {
+        val intent = intent
+        val extras = intent.extras
         if (extras != null) {
-            appWidgetId = extras.getInt(
+            val appWidgetId = extras.getInt(
                 AppWidgetManager.EXTRA_APPWIDGET_ID,
-                AppWidgetManager.INVALID_APPWIDGET_ID);
+                AppWidgetManager.INVALID_APPWIDGET_ID)
             if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
                 finish()
             }
 
             val resultValue = Intent()
-            resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-            setResult(RESULT_OK, resultValue);
-            finish();
+            resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+            setResult(RESULT_OK, resultValue)
+            finish()
         }
-    }
-
-    fun test(){
-        val sharedPref = getSharedPreferences("cardprefs", Context.MODE_PRIVATE) ?: return
-        val nr = sharedPref.getInt("card_nr", -1)
-        val nUrl = "$url$nr/"
-        val balance = getMyBalance(nUrl)
-
-        Toast.makeText(this, intToString(balance), Toast.LENGTH_SHORT).show();
-
-
-
-
-    }
-
-    fun intToString(nr: Int): String {
-        return BigDecimal(nr).movePointLeft(2).toString() + "€"
     }
 }

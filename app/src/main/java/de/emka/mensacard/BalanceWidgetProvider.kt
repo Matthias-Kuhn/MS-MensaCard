@@ -17,7 +17,7 @@ import java.math.BigDecimal
 
 
 class BalanceWidgetProvider: AppWidgetProvider() {
-    var url = "https://topup.klarna.com/api/v1/STW_MUNSTER/cards/"
+    val BASE_URL = "https://topup.klarna.com/api/v1/STW_MUNSTER/cards/"
 
     override fun onUpdate(
         context: Context?,
@@ -26,56 +26,12 @@ class BalanceWidgetProvider: AppWidgetProvider() {
     ) {
         val sharedPref = context!!.getSharedPreferences("cardprefs", Context.MODE_PRIVATE) ?: return
         val nr = sharedPref.getInt("card_nr", -1)
-        val nUrl = "$url$nr/"
-        val balance = getMyBalance(nUrl)
-        appWidgetIds!!.forEach { appWidgetId ->
-            val textViews: RemoteViews = RemoteViews(
-                context.packageName,
-                R.layout.balance_widget
-            ).apply {
-                setTextViewText(R.id.tv_balance, intToString(balance))
-                Toast.makeText(context!!, intToString(balance), Toast.LENGTH_SHORT);
+        val nUrl = "$BASE_URL$nr/"
 
-                //etOnClickPendingIntent(R.id.tv_balance, open())
 
-            }
-
-            appWidgetManager!!.updateAppWidget(appWidgetId, textViews)
-
-        }
-    }
-
-//    override fun onUpdate(
-//        context: Context,
-//        appWidgetManager: AppWidgetManager,
-//        appWidgetIds: IntArray
-//    ) {
-//
-//        val sharedPref = context.getSharedPreferences("cardprefs", Context.MODE_PRIVATE) ?: return
-//        val nr = sharedPref.getInt("card_nr", -1)
-//        val nUrl = "$url$nr/"
-//        val balance = getMyBalance(nUrl)
-//        appWidgetIds.forEach { appWidgetId ->
-//            val textViews: RemoteViews = RemoteViews(
-//                context.packageName,
-//                R.layout.balance_widget
-//            ).apply {
-//                setTextViewText(R.id.tv_balance, intToString(balance))
-//
-//                //etOnClickPendingIntent(R.id.tv_balance, open())
-//
-//            }
-//
-//            appWidgetManager.updateAppWidget(appWidgetId, textViews)
-//
-//        }
-//    }
-
-    private fun getMyBalance(url: String): Int {
-        var result = -1
         val retrofitBuilder = Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create())
-            .baseUrl(url)
+            .baseUrl(nUrl)
             .build()
             .create(BalanceApi::class.java)
         val retrofitData = retrofitBuilder.getBalance()
@@ -88,17 +44,30 @@ class BalanceWidgetProvider: AppWidgetProvider() {
                 val responseBody = response.body()
 
                 if(responseBody != null) {
-                    result = responseBody.balance
+                    val balance = responseBody.balance
                     Log.d("Emka - Tag", "onResponse: ${responseBody.balance}")
+                    appWidgetIds!!.forEach { appWidgetId ->
+                        val textViews: RemoteViews = RemoteViews(
+                            context.packageName,
+                            R.layout.balance_widget
+                        ).apply {
+                            setTextViewText(R.id.tv_balance, intToString(balance))
+                        }
+
+                        appWidgetManager!!.updateAppWidget(appWidgetId, textViews)
+
+                    }
+                } else {
+                    Log.d("Emka - Tag", "responseBody is null")
                 }
-                Log.d("Emka - Tag", "responseBody is null")
+
             }
 
             override fun onFailure(call: Call<BalanceResponse?>, t: Throwable) {
                 Log.d("Emka - Tag", "onFailure: ")
             }
         })
-        return result
+
     }
 
     fun intToString(nr: Int): String {
