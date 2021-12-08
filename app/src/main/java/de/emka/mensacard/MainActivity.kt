@@ -17,17 +17,20 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Button
 import android.widget.EditText
+import android.widget.RemoteViews
+import android.widget.Toast
+import java.math.BigDecimal
 
 
 class MainActivity : AppCompatActivity() {
 
-    var url = "https://topup.klarna.com/api/v1/STW_MUNSTER/cards/2070000/"
+    var url = "https://topup.klarna.com/api/v1/STW_MUNSTER/cards/"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        getMyBalance()
+
 
         val sharedPref = getSharedPreferences("cardprefs",Context.MODE_PRIVATE) ?: return
         val nr = sharedPref.getInt("card_nr", -1)
@@ -39,11 +42,13 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.button).setOnClickListener {
             storeNr(findViewById<EditText>(R.id.editTextNumber).text.toString().toInt())
+            test()
             showAppWidget()
         }
     }
 
-    private fun getMyBalance() {
+    private fun getMyBalance(url: String): Int {
+        var result = -1
         val retrofitBuilder = Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create())
             .baseUrl(url)
@@ -56,14 +61,22 @@ class MainActivity : AppCompatActivity() {
                 call: Call<BalanceResponse?>,
                 response: Response<BalanceResponse?>
             ) {
-                val responseBody = response.body()!!
-                Log.d("Emka - Tag", "onResponse: ${responseBody.balance}")
+                val responseBody = response.body()
+
+                if(responseBody != null) {
+                    result = responseBody.balance
+                    Log.d("Emka - Tag", "onResponse: ${responseBody.balance}")
+                } else {
+                    Log.d("Emka - Tag", "responseBody is null")
+                }
+
             }
 
             override fun onFailure(call: Call<BalanceResponse?>, t: Throwable) {
                 Log.d("Emka - Tag", "onFailure: ")
             }
         })
+        return result
     }
 
     fun storeNr(nr: Int){
@@ -86,7 +99,7 @@ class MainActivity : AppCompatActivity() {
                 AppWidgetManager.EXTRA_APPWIDGET_ID,
                 AppWidgetManager.INVALID_APPWIDGET_ID);
             if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-                finish();
+                finish()
             }
 
             val resultValue = Intent()
@@ -94,5 +107,22 @@ class MainActivity : AppCompatActivity() {
             setResult(RESULT_OK, resultValue);
             finish();
         }
+    }
+
+    fun test(){
+        val sharedPref = getSharedPreferences("cardprefs", Context.MODE_PRIVATE) ?: return
+        val nr = sharedPref.getInt("card_nr", -1)
+        val nUrl = "$url$nr/"
+        val balance = getMyBalance(nUrl)
+
+        Toast.makeText(this, intToString(balance), Toast.LENGTH_SHORT).show();
+
+
+
+
+    }
+
+    fun intToString(nr: Int): String {
+        return BigDecimal(nr).movePointLeft(2).toString() + "€"
     }
 }

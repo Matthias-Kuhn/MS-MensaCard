@@ -3,8 +3,10 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/MensaCardApp/app/src/main/res/layout/activity_main.xml" value="0.36666666666666664" />
-        <entry key="..\:/MensaCardApp/app/src/main/res/layout/balance_widget.xml" value="0.23645833333333333" />
+        <entry key="..\:/MensaCardApp/app/src/main/res/drawable/background_gradient.xml" value="0.2526041666666667" />
+        <entry key="..\:/MensaCardApp/app/src/main/res/drawable/widget_a_bg.xml" value="0.2526041666666667" />
+        <entry key="..\:/MensaCardApp/app/src/main/res/layout/activity_main.xml" value="0.25" />
+        <entry key="..\:/MensaCardApp/app/src/main/res/layout/balance_widget.xml" value="0.33" />
         <entry key="..\:/MensaCardApp/app/src/main/res/layout/balance_widget_preview.xml" value="0.23645833333333333" />
         <entry key="..\:/MensaCardApp/app/src/main/res/xml/balance_widget_provider_info.xml" value="0.23645833333333333" />
       </map>
