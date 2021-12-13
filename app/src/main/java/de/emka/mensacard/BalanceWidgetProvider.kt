@@ -86,6 +86,11 @@ class BalanceWidgetProvider: AppWidgetProvider() {
                     val sdf = SimpleDateFormat("dd.MM   hh:mm")
                     val currentDate = sdf.format(Date())
                     Log.d("Emka - Tag", "onResponse: ${responseBody.balance}")
+                    with (sharedPref.edit()) {
+                        putString("balance", intToString(balance))
+                        putString("date", currentDate)
+                        apply()
+                    }
                     appWidgetIds!!.forEach { appWidgetId ->
                         val textViews: RemoteViews = RemoteViews(
                             context.packageName,
@@ -105,6 +110,20 @@ class BalanceWidgetProvider: AppWidgetProvider() {
 
             override fun onFailure(call: Call<BalanceResponse?>, t: Throwable) {
                 Log.d("Emka - Tag", "onFailure: ")
+                val balanceString = sharedPref.getString("balance", "Fehler")
+                val dateString = sharedPref.getString("date", "-")
+                appWidgetIds!!.forEach { appWidgetId ->
+                    val textViews: RemoteViews = RemoteViews(
+                        context.packageName,
+                        R.layout.balance_widget
+                    ).apply {
+                        setTextViewText(R.id.tv_balance, balanceString)
+                        setTextViewText(R.id.tv_date, dateString)
+                    }
+
+                    appWidgetManager!!.updateAppWidget(appWidgetId, textViews)
+
+                }
             }
         })
     }
