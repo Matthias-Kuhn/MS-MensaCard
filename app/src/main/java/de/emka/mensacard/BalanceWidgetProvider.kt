@@ -83,7 +83,7 @@ class BalanceWidgetProvider: AppWidgetProvider() {
 
                 if(responseBody != null) {
                     val balance = responseBody.balance
-                    val sdf = SimpleDateFormat("dd.MM   hh:mm")
+                    val sdf = SimpleDateFormat("dd.MM   HH:mm")
                     val currentDate = sdf.format(Date())
                     Log.d("Emka - Tag", "onResponse: ${responseBody.balance}")
                     with (sharedPref.edit()) {
