@@ -6,7 +6,9 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_a_bg"
     android:orientation="vertical"
-    android:gravity="center_vertical">
+    android:gravity="center_vertical"
+    android:id="@+id/bg">
+
 
     <TextView
         android:id="@+id/tv_title"
@@ -25,5 +27,16 @@
         android:textColor="@color/white"
         android:textSize="34sp"
         tools:text="2.54€" />
+
+
+
+    <TextView
+        android:id="@+id/tv_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:text="10.12 19:00"
+        android:textAlignment="center"
+        android:textColor="@color/white" />
 
 </LinearLayout>
