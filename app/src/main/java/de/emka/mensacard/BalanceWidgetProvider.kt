@@ -25,11 +25,12 @@ import android.content.ComponentName
 import android.content.Intent
 
 class BalanceWidgetProvider: AppWidgetProvider() {
-    val BASE_URL = "https://topup.klarna.com/api/v1/STW_MUNSTER/cards/"
+    val BASE_URL = "https://api.topup.klarna.com/api/v1/STW_MUNSTER/cards/"
 
-    // method called after reboot
+    // called when widget for BalanceWidgetProvider is instantiated. (e.g. boot)
     override fun onEnabled(context: Context?) {
         super.onEnabled(context)
+
         val appWidgetManager = AppWidgetManager.getInstance(context)
         val widget = ComponentName(context!!.packageName, BalanceWidgetProvider::class.java.name)
         val widgetIds = appWidgetManager.getAppWidgetIds(widget)
@@ -47,32 +48,24 @@ class BalanceWidgetProvider: AppWidgetProvider() {
         val nr = sharedPref.getInt("card_nr", -1)
         val nUrl = "$BASE_URL$nr/"
 
+        val retrofitData = getBalanceResponse(nUrl)
 
-        val retrofitBuilder = Retrofit.Builder()
-            .addConverterFactory(GsonConverterFactory.create())
-            .baseUrl(nUrl)
-            .build()
-            .create(BalanceApi::class.java)
-        val retrofitData = retrofitBuilder.getBalance()
-
+        // update widget onClick with PendingIntent
         appWidgetIds!!.forEach { appWidgetId ->
             val views = RemoteViews(context.packageName, R.layout.balance_widget).apply {
-
-                // create intent for update onClick
                 val intentUpdate = Intent(context, BalanceWidgetProvider::class.java)
                 intentUpdate.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
                 val idArray = intArrayOf(appWidgetId)
                 intentUpdate.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, idArray)
                 val pendingUpdate = PendingIntent.getBroadcast(
-                    context,
-                    0, intentUpdate, PendingIntent.FLAG_UPDATE_CURRENT)
+                    context, 0, intentUpdate, PendingIntent.FLAG_UPDATE_CURRENT)
                 setOnClickPendingIntent(R.id.bg, pendingUpdate)
             }
             appWidgetManager!!.updateAppWidget(appWidgetId, views)
         }
 
 
-
+        // handle received retrofit data
         retrofitData.enqueue(object : Callback<BalanceResponse?> {
             @SuppressLint("RemoteViewLayout")
             override fun onResponse(
@@ -91,7 +84,9 @@ class BalanceWidgetProvider: AppWidgetProvider() {
                         putString("date", currentDate)
                         apply()
                     }
-                    appWidgetIds!!.forEach { appWidgetId ->
+
+                    // update textViews on every widget
+                    appWidgetIds.forEach { appWidgetId ->
                         val textViews: RemoteViews = RemoteViews(
                             context.packageName,
                             R.layout.balance_widget
@@ -99,12 +94,12 @@ class BalanceWidgetProvider: AppWidgetProvider() {
                             setTextViewText(R.id.tv_balance, intToString(balance))
                             setTextViewText(R.id.tv_date, currentDate)
                         }
-
                         appWidgetManager!!.updateAppWidget(appWidgetId, textViews)
-
                     }
                 } else {
+                    // e.g. wrong card nr
                     Log.d("Emka - Tag", "responseBody is null")
+
                 }
             }
 
@@ -112,7 +107,7 @@ class BalanceWidgetProvider: AppWidgetProvider() {
                 Log.d("Emka - Tag", "onFailure: ")
                 val balanceString = sharedPref.getString("balance", "Fehler")
                 val dateString = sharedPref.getString("date", "-")
-                appWidgetIds!!.forEach { appWidgetId ->
+                appWidgetIds.forEach { appWidgetId ->
                     val textViews: RemoteViews = RemoteViews(
                         context.packageName,
                         R.layout.balance_widget
@@ -128,12 +123,13 @@ class BalanceWidgetProvider: AppWidgetProvider() {
         })
     }
 
+    // receive PendingIntent from onClick
     override fun onReceive(context: Context?, intent: Intent?) {
         super.onReceive(context, intent)
         Log.d("Emka - Tag", "onReceive: called")
 
         if (intent!= null){
-            var extras = intent.extras
+            val extras = intent.extras
             if (extras!= null) {
                 Log.d("Emka - Tag", "onReceive: called - inner")
                 val appWidgetManager = AppWidgetManager.getInstance(context)
@@ -143,11 +139,23 @@ class BalanceWidgetProvider: AppWidgetProvider() {
                 onUpdate(context, appWidgetManager, widgetIds)
             }
         }
-
     }
 
-    fun intToString(nr: Int): String {
-        return BigDecimal(nr).movePointLeft(2).toString() + "€"
+
+    private fun getBalanceResponse(url: String): Call<BalanceResponse> {
+        val retrofitBuilder = Retrofit.Builder()
+            .addConverterFactory(GsonConverterFactory.create())
+            .baseUrl(url)
+            .build()
+            .create(BalanceApi::class.java)
+        return retrofitBuilder.getBalance()
+    }
+
+    /**
+     * Convert the balance in cents to a formatted String
+     */
+    fun intToString(balance: Int): String {
+        return BigDecimal(balance).movePointLeft(2).toString() + "€"
     }
 
 }
