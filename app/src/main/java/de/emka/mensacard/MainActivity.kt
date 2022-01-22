@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
 
                 if (responseBody != null) {
                     val balance = responseBody.balance
-                    val displayText = getString(R.string.currentBalance) + BalanceUtils.intToString(balance)
+                    val displayText = getString(R.string.currentBalance) + ": " + BalanceUtils.intToString(balance)
                     findViewById<TextView>(R.id.textView2).text = displayText
                 } else {
                     findViewById<TextView>(R.id.textView2).text = getString(R.string.balanceNotAvailable)
@@ -94,7 +94,6 @@ class MainActivity : AppCompatActivity() {
             val resultValue = Intent()
             resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             setResult(RESULT_OK, resultValue)
-            finish()
         }
     }
 }
