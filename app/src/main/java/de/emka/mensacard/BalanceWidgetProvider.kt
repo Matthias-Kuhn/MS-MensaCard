@@ -6,15 +6,10 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.util.Log
 import android.widget.RemoteViews
-import android.widget.Toast
-import de.emka.mensacard.data.BalanceApi
 import de.emka.mensacard.data.BalanceResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -48,7 +43,7 @@ class BalanceWidgetProvider: AppWidgetProvider() {
         val nr = sharedPref.getInt("card_nr", -1)
         val nUrl = "$BASE_URL$nr/"
 
-        val retrofitData = getBalanceResponse(nUrl)
+        val retrofitData = BalanceUtils.getBalanceResponse(nUrl)
 
         // update widget onClick with PendingIntent
         appWidgetIds!!.forEach { appWidgetId ->
@@ -80,7 +75,7 @@ class BalanceWidgetProvider: AppWidgetProvider() {
                     val currentDate = sdf.format(Date())
                     Log.d("Emka - Tag", "onResponse: ${responseBody.balance}")
                     with (sharedPref.edit()) {
-                        putString("balance", intToString(balance))
+                        putString("balance", BalanceUtils.intToString(balance))
                         putString("date", currentDate)
                         apply()
                     }
@@ -91,7 +86,7 @@ class BalanceWidgetProvider: AppWidgetProvider() {
                             context.packageName,
                             R.layout.balance_widget
                         ).apply {
-                            setTextViewText(R.id.tv_balance, intToString(balance))
+                            setTextViewText(R.id.tv_balance, BalanceUtils.intToString(balance))
                             setTextViewText(R.id.tv_date, currentDate)
                         }
                         appWidgetManager!!.updateAppWidget(appWidgetId, textViews)
@@ -141,21 +136,5 @@ class BalanceWidgetProvider: AppWidgetProvider() {
         }
     }
 
-
-    private fun getBalanceResponse(url: String): Call<BalanceResponse> {
-        val retrofitBuilder = Retrofit.Builder()
-            .addConverterFactory(GsonConverterFactory.create())
-            .baseUrl(url)
-            .build()
-            .create(BalanceApi::class.java)
-        return retrofitBuilder.getBalance()
-    }
-
-    /**
-     * Convert the balance in cents to a formatted String
-     */
-    fun intToString(balance: Int): String {
-        return BigDecimal(balance).movePointLeft(2).toString() + "€"
-    }
 
 }

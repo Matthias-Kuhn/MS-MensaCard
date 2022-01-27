@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">MensaCard</string>
     <string name="widget_desc">MensaCard Kontostand</string>
+    <string name="balanceNotAvailable">Guthaben konnte nicht abgerufen werden</string>
+    <string name="currentBalance">Aktuelles Guthaben</string>
 
 </resources>
